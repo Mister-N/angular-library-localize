@@ -1,27 +1,40 @@
-# LibraryLocalize
+Есть проект, в который нужно добавить переводы. Никакой острой необходимости нет, но вот решили, что негоже именам кнопок в шаблонах хардкодить, давайте их куда-нибудь в константы да и вынесем. Проект на nx и весь функционал в библиотеках, соответственно переводить нужно либы. Тут и проблема. 
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.11.
+## Шаги к воспроизведению:
 
-## Development server
+В принципе коммиты разбиты на шаги к воспроизведению и я старался там описать подробнее. 
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Но добавлю и здесь:
 
-## Code scaffolding
+- Создаем новый проект ангулар - `ng new library-localize`. Обращаем внимание, что на этом шаге angular.json уже создается с конфигом переводов для апликейшина library-localize
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+  ```typescript
+  "extract-i18n": {
+    "builder": "@angular-devkit/build-angular:extract-i18n",
+    "options": {
+      "browserTarget": "library-localize:build"
+    }
+  },
+  ```
 
-## Build
+- Создаем библиотеку `ng g library app`. Библиотека создается без конфигурации переводов.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+- Добавляем `ng add @angular/localize`
 
-## Running unit tests
+- В принципе сейчас уже можно скопировать конфиг из первого шага в библиотеку с `"browserTarget": "lib:build"` и получить ошибку, вызвав `ng run lib:extract-i18n`  Это сделано в ветке quick_reproduction. Но в основной ветке я еще немного поменял конфиг, указав пути к локалям.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+   И все-таки тут 
 
-## Running end-to-end tests
+  ```typescript
+   ng run lib:extract-i18n
+  ⠋ Generating browser application bundles (phase: setup)...An unhandled exception occurred: The "path" argument must be of type string. Received undefined
+  See "/tmp/ng-kcD88N/angular-errors.log" for further details.
+  
+  ```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+  ---
+  
 
-## Further help
+  Чисто глядя в angular-errors.log, я увидел, что собственно билдер @angular-devkit/build-angular:extract-i18n берёт buildOptions.outputPath и если этого параметра нет - то вылетает ошибка. Таким образом похоже, что build-angular:extract-i18n заточен чисто под билдеры апликейшинов, а вот @angular-devkit/build-angular:ng-packagr или @nrwl/angular:ng-packagr-lite не сработают. 
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+  Так что же делать, как правильно переводить библиотеки? В nx/nrwl же весь код в них. Ну не может же такого быть, что переводы работают только в апликейшинах, но не в либах. 
